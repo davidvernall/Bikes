@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bike Fit — Personalised Fit Wizard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --blue:#1d4ed8;
+  --blue-light:#dbeafe;
+  --blue-mid:#3b82f6;
+  --blue-dark:#1e3a8a;
+  --yellow:#fbbf24;
+  --yellow-light:#fef9c3;
+  --green:#16a34a;
+  --green-light:#dcfce7;
+  --green-border:#86efac;
+  --amber:#d97706;
+  --amber-light:#fef3c7;
+  --amber-border:#fcd34d;
+  --red:#dc2626;
+  --red-light:#fee2e2;
+  --text:#111827;
+  --text-muted:#6b7280;
+  --text-secondary:#374151;
+  --border:#e5e7eb;
+  --border-strong:#d1d5db;
+  --surface:#f9fafb;
+  --white:#ffffff;
+  --radius:8px;
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--surface);
+  color:var(--text);
+  line-height:1.6;
+  font-size:15px;
+  min-height:100vh;
+}
+
+/* HERO */
+.hero{
+  background:var(--blue-dark);
+  color:white;
+  padding:2.5rem 1.25rem 2rem;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-40px;right:-60px;
+  width:300px;height:300px;
+  border-radius:50%;
+  background:rgba(59,130,246,0.15);
+  pointer-events:none;
+}
+.hero::after{
+  content:'⚙';
+  position:absolute;
+  bottom:-20px;right:20px;
+  font-size:140px;
+  opacity:0.04;
+  line-height:1;
+  pointer-events:none;
+}
+.hero-inner{position:relative;max-width:640px;margin:0 auto}
+.hero-eyebrow{
+  display:inline-block;
+  font-size:11px;font-weight:700;
+  letter-spacing:0.1em;text-transform:uppercase;
+  background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.2);
+  padding:3px 10px;border-radius:20px;
+  margin-bottom:0.875rem;
+}
+.hero h1{font-size:clamp(24px,5vw,36px);font-weight:800;line-height:1.15;margin-bottom:0.5rem}
+.hero-sub{font-size:14px;opacity:0.75;margin-bottom:1.5rem;max-width:480px}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px}
+.hero-pill{
+  font-size:12px;font-weight:600;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  padding:4px 12px;border-radius:20px;
+}
+
+/* MAIN */
+.main{max-width:640px;margin:0 auto;padding:1.5rem 1.25rem}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:1.5rem}
+.progress-bar{display:flex;gap:5px;margin-bottom:6px}
+.prog-seg{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background 0.25s}
+.prog-seg.done{background:var(--blue-mid)}
+.prog-seg.active{background:var(--blue)}
+.step-labels{display:flex;overflow-x:auto;scrollbar-width:none;gap:0}
+.step-labels::-webkit-scrollbar{display:none}
+.step-label{flex:1;font-size:10px;color:var(--text-muted);text-align:center;min-width:58px;padding:0 2px;white-space:nowrap}
+.step-label.active{color:var(--blue);font-weight:600}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+.step-eyebrow{font-size:12px;color:var(--text-muted);margin-bottom:4px}
+.step-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:1.25rem}
+
+/* FORM ELEMENTS */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field-label{font-size:13px;font-weight:600;color:var(--text-secondary)}
+.field-hint{font-size:12px;color:var(--text-muted);line-height:1.5}
+.field-err{font-size:12px;color:var(--red);display:none;margin-top:2px}
+
+input[type=number]{
+  width:100%;
+  padding:9px 12px;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius);
+  font-size:14px;
+  color:var(--text);
+  background:var(--white);
+  transition:border-color 0.15s;
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]:focus{outline:none;border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(59,130,246,0.15)}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* SEG BUTTONS */
+.seg-group{display:flex;gap:7px;flex-wrap:wrap}
+.seg-btn{
+  padding:7px 14px;font-size:13px;font-weight:500;
+  border-radius:var(--radius);
+  border:1px solid var(--border-strong);
+  background:var(--white);color:var(--text-secondary);
+  cursor:pointer;transition:all 0.15s;
+}
+.seg-btn:hover{background:var(--surface);border-color:var(--blue-mid);color:var(--text)}
+.seg-btn.sel{background:var(--blue-light);color:var(--blue-dark);border-color:var(--blue-mid);font-weight:600}
+
+/* PAIN GRID */
+.pain-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pain-btn{
+  padding:10px 12px;font-size:13px;
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  background:var(--white);color:var(--text-secondary);
+  cursor:pointer;text-align:left;
+  transition:all 0.15s;
+  display:flex;align-items:center;gap:8px;
+}
+.pain-btn:hover{border-color:var(--border-strong);background:var(--surface)}
+.pain-btn.sel{background:var(--amber-light);color:var(--amber);border-color:var(--amber-border)}
+.pain-icon{font-size:18px}
+
+/* NAV */
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;gap:10px}
+.step-nav-left{display:flex;gap:8px}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;font-size:14px;font-weight:600;
+  border-radius:var(--radius);border:1px solid var(--border-strong);
+  background:var(--white);color:var(--text);
+  cursor:pointer;transition:all 0.15s;
+}
+.btn:hover{background:var(--surface);border-color:var(--blue-mid)}
+.btn-primary{background:var(--blue);color:white;border-color:var(--blue)}
+.btn-primary:hover{background:var(--blue-dark);border-color:var(--blue-dark)}
+.btn-sm{padding:7px 14px;font-size:13px}
+
+/* CALLOUTS */
+.callout{border-radius:var(--radius);padding:10px 14px;font-size:13px;line-height:1.55;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout-blue{background:var(--blue-light);color:var(--blue-dark);border:1px solid #bfdbfe}
+.callout-amber{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-border)}
+.callout-green{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.callout-red{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+
+/* PHOTO SECTION */
+.angle-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:1.125rem 1.25rem;
+  margin-bottom:12px;
+}
+.angle-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.angle-icon-wrap{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:20px;
+}
+.angle-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.angle-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.angle-guide{
+  font-size:12px;color:var(--text-secondary);line-height:1.6;
+  background:var(--surface);border-radius:var(--radius);
+  padding:10px 12px;margin-bottom:12px;
+  border-left:3px solid var(--blue-mid);
+}
+.angle-guide strong{color:var(--text);font-weight:600}
+
+.upload-zone{
+  border:2px dashed var(--border-strong);border-radius:var(--radius);
+  padding:20px;text-align:center;cursor:pointer;
+  transition:all 0.15s;position:relative;
+  background:var(--white);
+}
+.upload-zone:hover{border-color:var(--blue-mid);background:var(--blue-light)}
+.upload-zone input[type=file]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;
+  width:100%;height:100%;
+}
+.upload-icon{font-size:28px;color:var(--text-muted);display:block;margin-bottom:6px}
+.upload-text{font-size:13px;color:var(--text-secondary);font-weight:500}
+.upload-sub{font-size:12px;color:var(--text-muted);margin-top:3px}
+
+.preview-wrap{margin-top:10px;position:relative;display:none}
+.preview-img{width:100%;border-radius:var(--radius);border:1px solid var(--border);max-height:220px;object-fit:cover;display:block}
+.preview-remove{
+  position:absolute;top:8px;right:8px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,0.9);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;color:var(--text-muted);
+  transition:all 0.15s;
+}
+.preview-remove:hover{background:var(--red-light);color:var(--red);border-color:#fca5a5}
+
+.analyse-btn{width:100%;margin-top:10px;display:none;justify-content:center}
+.analysis-box{
+  margin-top:10px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+  font-size:13px;color:var(--text-secondary);line-height:1.6;
+  display:none;
+}
+.loading-spin{display:inline-flex;align-items:center;gap:8px;color:var(--text-muted)}
+.spin{display:inline-block;animation:spin 1s linear infinite;font-size:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.badge-done{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:600;
+  background:var(--green-light);color:var(--green);
+  padding:2px 8px;border-radius:20px;
+}
+
+/* REPORT */
+.report-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:12px;padding:1.125rem 1.25rem;
+  margin-bottom:10px;
+}
+.report-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.report-card-icon{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--blue-light);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:18px;
+}
+.report-card-title{font-size:14px;font-weight:700;color:var(--text)}
+.meas-row{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border)}
+.meas-row:last-child{border-bottom:none}
+.meas-label{font-size:13px;color:var(--text-secondary)}
+.meas-val{font-size:16px;font-weight:700;color:var(--text)}
+.meas-val.accent{color:var(--blue)}
+.meas-unit{font-size:12px;color:var(--text-muted);font-weight:400;margin-left:2px}
+.report-hint{font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.5}
+.section-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.07em;color:var(--text-muted);
+  margin:1.5rem 0 0.625rem;
+}
+.adj-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.adj-item:last-child{border-bottom:none}
+.adj-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--blue);color:white;
+  font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.adj-text{font-size:13px;color:var(--text-secondary);line-height:1.55}
+.adj-text strong{color:var(--text);font-weight:600}
+.photo-finding{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.disclaimer{font-size:12px;color:var(--text-muted);margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);line-height:1.6}
+
+/* FOOTER */
+footer{max-width:640px;margin:0 auto;padding:1.5rem 1.25rem;text-align:center;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border)}
+
+@media(max-width:420px){
+  .two-col{grid-template-columns:1fr}
+  .pain-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">DIY bike fit tool</span>
+    <h1>Find your perfect position</h1>
+    <p class="hero-sub">A five-step fit wizard using proven biomechanical formulas and AI photo analysis. Takes about 10 minutes.</p>
+    <div class="hero-pills">
+      <span class="hero-pill">All bike types</span>
+      <span class="hero-pill">Metric</span>
+      <span class="hero-pill">AI photo analysis</span>
+      <span class="hero-pill">Personalised report</span>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <div class="progress-wrap">
+    <div class="progress-bar">
+      <div class="prog-seg active" id="d0"></div>
+      <div class="prog-seg" id="d1"></div>
+      <div class="prog-seg" id="d2"></div>
+      <div class="prog-seg" id="d3"></div>
+      <div class="prog-seg" id="d4"></div>
+    </div>
+    <div class="step-labels">
+      <div class="step-label active" id="sl0">Profile</div>
+      <div class="step-label" id="sl1">Measurements</div>
+      <div class="step-label" id="sl2">Comfort</div>
+      <div class="step-label" id="sl3">Photos</div>
+      <div class="step-label" id="sl4">Report</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Profile -->
+  <div class="panel active" id="s0">
+    <div class="step-eyebrow">Step 1 of 5</div>
+    <div class="step-title">Your rider profile</div>
+
+    <div class="field">
+      <div class="field-label">Bike type</div>
+      <div class="seg-group" id="bikeType">
+        <button class="seg-btn" onclick="seg('bikeType',this,'road')">Road</button>
+        <button class="seg-btn" onclick="seg('bikeType',this,'mountain')">Mountain</button>
+        <button class="seg-btn" onclick="seg('bikeType',this,'gravel')">Gravel</button>
+        <button class="seg-btn" onclick="seg('bikeType',this,'hybrid')">Hybrid / commuter</button>
+      </div>
+      <div class="field-err" id="e-bikeType">Select a bike type to continue.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Riding style</div>
+      <div class="seg-group" id="rideStyle">
+        <button class="seg-btn" onclick="seg('rideStyle',this,'comfort')">Comfort</button>
+        <button class="seg-btn" onclick="seg('rideStyle',this,'performance')">Performance</button>
+        <button class="seg-btn" onclick="seg('rideStyle',this,'aggressive')">Aggressive / race</button>
+      </div>
+      <div class="field-err" id="e-rideStyle">Select a riding style to continue.</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Flexibility</div>
+      <div class="field-hint">Standing upright, can you touch your toes without bending your knees?</div>
+      <div class="seg-group" id="flexibility">
+        <button class="seg-btn" onclick="seg('flexibility',this,'good')">Yes, easily</button>
+        <button class="seg-btn" onclick="seg('flexibility',this,'average')">Fingertips to shins</button>
+        <button class="seg-btn" onclick="seg('flexibility',this,'limited')">Knees only</button>
+      </div>
+      <div class="field-err" id="e-flexibility">Select your flexibility to continue.</div>
+    </div>
+
+    <div class="step-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(1)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: Measurements -->
+  <div class="panel" id="s1">
+    <div class="step-eyebrow">Step 2 of 5</div>
+    <div class="step-title">Body measurements</div>
+
+    <div class="callout callout-blue">
+      <span class="callout-icon">&#9432;</span>
+      <span>Measure in bare feet, standing against a wall. Use centimetres for everything. Fitted clothing gives the most accurate results.</span>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <div class="field-label">Inseam (cm)</div>
+        <div class="field-hint">Hold a book between your legs as high as comfortable. Measure floor to the spine of the book.</div>
+        <input type="number" id="inseam" placeholder="e.g. 82" min="50" max="120" oninput="clearE('inseam')">
+        <div class="field-err" id="e-inseam">Enter your inseam (50–120 cm).</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Height (cm)</div>
+        <div class="field-hint">Stand straight, back against the wall, heels flat.</div>
+        <input type="number" id="height" placeholder="e.g. 175" min="120" max="220" oninput="clearE('height')">
+        <div class="field-err" id="e-height">Enter your height (120–220 cm).</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <div class="field-label">Torso length (cm)</div>
+        <div class="field-hint">Sit upright on a flat surface. Measure from the seat to the top of your shoulder.</div>
+        <input type="number" id="torso" placeholder="e.g. 58" min="30" max="90" oninput="clearE('torso')">
+        <div class="field-err" id="e-torso">Enter your torso length (30–90 cm).</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Arm length (cm)</div>
+        <div class="field-hint">Shoulder to wrist, arm held slightly bent at the elbow.</div>
+        <input type="number" id="armLength" placeholder="e.g. 60" min="40" max="90" oninput="clearE('armLength')">
+        <div class="field-err" id="e-armLength">Enter your arm length (40–90 cm).</div>
+      </div>
+    </div>
+
+    <div class="field" style="max-width:220px">
+      <div class="field-label">Shoulder width (cm)</div>
+      <div class="field-hint">Measured across the bony points on top of each shoulder.</div>
+      <input type="number" id="shoulderW" placeholder="e.g. 42" min="25" max="65" oninput="clearE('shoulderW')">
+      <div class="field-err" id="e-shoulderW">Enter your shoulder width (25–65 cm).</div>
+    </div>
+
+    <div class="step-nav">
+      <div class="step-nav-left">
+        <button class="btn" onclick="goStep(0)">&larr; Back</button>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(2)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Comfort -->
+  <div class="panel" id="s2">
+    <div class="step-eyebrow">Step 3 of 5</div>
+    <div class="step-title">Where do you feel discomfort?</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem">Select all that apply. New to cycling? Skip this and tap Next.</p>
+
+    <div class="pain-grid" id="painGrid">
+      <button class="pain-btn" onclick="togglePain(this,'knee')" data-p="knee">
+        <span class="pain-icon">🦵</span> Knee pain
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'lower_back')" data-p="lower_back">
+        <span class="pain-icon">🔧</span> Lower back
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'neck')" data-p="neck">
+        <span class="pain-icon">😬</span> Neck / upper back
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'hands')" data-p="hands">
+        <span class="pain-icon">🤚</span> Hands / wrists
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'sit_bones')" data-p="sit_bones">
+        <span class="pain-icon">🪑</span> Sit bones / saddle
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'feet')" data-p="feet">
+        <span class="pain-icon">👟</span> Feet / hot foot
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'hip')" data-p="hip">
+        <span class="pain-icon">🏃</span> Hip rocking
+      </button>
+      <button class="pain-btn" onclick="togglePain(this,'none')" data-p="none">
+        <span class="pain-icon">✅</span> No discomfort
+      </button>
+    </div>
+
+    <div class="step-nav">
+      <div class="step-nav-left">
+        <button class="btn" onclick="goStep(1)">&larr; Back</button>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(3)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: Photos -->
+  <div class="panel" id="s3">
+    <div class="step-eyebrow">Step 4 of 5</div>
+    <div class="step-title">Photo analysis</div>
+
+    <div class="callout callout-blue">
+      <span class="callout-icon">📷</span>
+      <span>Upload photos of yourself on the bike. Each angle reveals different fit issues. All three are optional — upload what you can, skip the rest. Wear fitted clothing for the most accurate analysis.</span>
+    </div>
+
+    <!-- Angle 1: Side-on -->
+    <div class="angle-card">
+      <div class="angle-header">
+        <div class="angle-icon-wrap">🚴</div>
+        <div>
+          <div class="angle-title">
+            Side-on view
+            <span class="badge-done" id="badge0" style="display:none">&#10003; Analysed</span>
+          </div>
+          <div class="angle-sub">Most important · Saddle height, back angle, knee extension, arm bend</div>
+        </div>
+      </div>
+      <div class="angle-guide">
+        <strong>How to set this up:</strong> Place your phone or camera directly to your side at hip height, about 3 metres away. Pedal until the cranks are vertical with one pedal at the very bottom of the stroke. Have someone take the shot, or use a timer. Make sure your full body and the bike are in frame.
+      </div>
+      <div class="upload-zone" id="uz0">
+        <input type="file" accept="image/*" onchange="handleUpload(0,this)" aria-label="Upload side-on photo">
+        <span class="upload-icon">&#8679;</span>
+        <div class="upload-text">Tap to upload or drag a photo here</div>
+        <div class="upload-sub">JPG, PNG or HEIC &middot; Max 10MB</div>
+      </div>
+      <div class="preview-wrap" id="pw0">
+        <img class="preview-img" id="pi0" alt="Side-on photo preview">
+        <button class="preview-remove" onclick="removePhoto(0)" aria-label="Remove photo">&#10005;</button>
+      </div>
+      <div style="display:none" id="ab0-wrap">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="analysePhoto(0,'side-on')">Analyse this photo &#10024;</button>
+      </div>
+      <div class="analysis-box" id="abox0"></div>
+    </div>
+
+    <!-- Angle 2: Front-facing -->
+    <div class="angle-card">
+      <div class="angle-header">
+        <div class="angle-icon-wrap">⬅️</div>
+        <div>
+          <div class="angle-title">
+            Front-facing view
+            <span class="badge-done" id="badge1" style="display:none">&#10003; Analysed</span>
+          </div>
+          <div class="angle-sub">Knee tracking, shoulder symmetry, hip alignment</div>
+        </div>
+      </div>
+      <div class="angle-guide">
+        <strong>How to set this up:</strong> Camera directly in front of you at knee height, about 3 metres away. Pedal slowly and pause when one knee is at the top of the stroke. Look straight ahead — not at the camera. This angle is particularly useful for spotting knee tracking issues and lateral imbalances.
+      </div>
+      <div class="upload-zone" id="uz1">
+        <input type="file" accept="image/*" onchange="handleUpload(1,this)" aria-label="Upload front-facing photo">
+        <span class="upload-icon">&#8679;</span>
+        <div class="upload-text">Tap to upload or drag a photo here</div>
+        <div class="upload-sub">JPG, PNG or HEIC &middot; Max 10MB</div>
+      </div>
+      <div class="preview-wrap" id="pw1">
+        <img class="preview-img" id="pi1" alt="Front-facing photo preview">
+        <button class="preview-remove" onclick="removePhoto(1)" aria-label="Remove photo">&#10005;</button>
+      </div>
+      <div style="display:none" id="ab1-wrap">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="analysePhoto(1,'front-facing')">Analyse this photo &#10024;</button>
+      </div>
+      <div class="analysis-box" id="abox1"></div>
+    </div>
+
+    <!-- Angle 3: Rear -->
+    <div class="angle-card">
+      <div class="angle-header">
+        <div class="angle-icon-wrap">↩️</div>
+        <div>
+          <div class="angle-title">
+            Rear view
+            <span class="badge-done" id="badge2" style="display:none">&#10003; Analysed</span>
+          </div>
+          <div class="angle-sub">Hip drop, saddle height symmetry, upper body sway</div>
+        </div>
+      </div>
+      <div class="angle-guide">
+        <strong>How to set this up:</strong> Camera directly behind you at hip height, about 3 metres away. Pedal until the cranks are vertical (bottom of the stroke). This angle reveals hip rocking and side-to-side movement that can signal a saddle set too high or a leg length difference.
+      </div>
+      <div class="upload-zone" id="uz2">
+        <input type="file" accept="image/*" onchange="handleUpload(2,this)" aria-label="Upload rear view photo">
+        <span class="upload-icon">&#8679;</span>
+        <div class="upload-text">Tap to upload or drag a photo here</div>
+        <div class="upload-sub">JPG, PNG or HEIC &middot; Max 10MB</div>
+      </div>
+      <div class="preview-wrap" id="pw2">
+        <img class="preview-img" id="pi2" alt="Rear view photo preview">
+        <button class="preview-remove" onclick="removePhoto(2)" aria-label="Remove photo">&#10005;</button>
+      </div>
+      <div style="display:none" id="ab2-wrap">
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="analysePhoto(2,'rear')">Analyse this photo &#10024;</button>
+      </div>
+      <div class="analysis-box" id="abox2"></div>
+    </div>
+
+    <div class="step-nav">
+      <div class="step-nav-left">
+        <button class="btn" onclick="goStep(2)">&larr; Back</button>
+      </div>
+      <button class="btn btn-primary" onclick="goStep(4)">Generate report &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: Report -->
+  <div class="panel" id="s4">
+    <div class="step-eyebrow">Step 5 of 5</div>
+    <div class="step-title">Your fit report</div>
+    <div id="reportContent"></div>
+  </div>
+
+</main>
+
+<footer>
+  Bike Fit Wizard &middot; Powered by AI &middot; Based on LeMond, Hamley &amp; KOPS fitting methods
+</footer>
+
+<script>
+var S={bikeType:'',rideStyle:'',flexibility:'',inseam:0,height:0,torso:0,armLength:0,shoulderW:0,pain:[]};
+var photos=[null,null,null];
+var photoAnalyses=['','',''];
+
+function seg(g,btn,v){
+  S[g]=v;
+  document.querySelectorAll('#'+g+' .seg-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  clearE(g);
+}
+
+function togglePain(btn,v){
+  if(v==='none'){
+    S.pain=['none'];
+    document.querySelectorAll('#painGrid .pain-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+    return;
+  }
+  S.pain=S.pain.filter(p=>p!=='none');
+  document.querySelector('[data-p="none"]').classList.remove('sel');
+  if(S.pain.includes(v)){S.pain=S.pain.filter(p=>p!==v);btn.classList.remove('sel');}
+  else{S.pain.push(v);btn.classList.add('sel');}
+}
+
+function clearE(id){var e=document.getElementById('e-'+id);if(e)e.style.display='none';}
+function showE(id){var e=document.getElementById('e-'+id);if(e)e.style.display='block';}
+
+function goStep(n){
+  var cur=getCur();
+  if(n>cur&&!validate(cur))return;
+  if(n===4)buildReport();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.prog-seg').forEach((d,i)=>{
+    d.className='prog-seg';
+    if(i<n)d.classList.add('done');
+    else if(i===n)d.classList.add('active');
+  });
+  document.querySelectorAll('.step-label').forEach((l,i)=>{
+    l.className='step-label';
+    if(i===n)l.classList.add('active');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function getCur(){
+  var ps=document.querySelectorAll('.panel');
+  for(var i=0;i<ps.length;i++)if(ps[i].classList.contains('active'))return i;
+  return 0;
+}
+
+function validate(step){
+  var ok=true;
+  if(step===0){
+    if(!S.bikeType){showE('bikeType');ok=false;}
+    if(!S.rideStyle){showE('rideStyle');ok=false;}
+    if(!S.flexibility){showE('flexibility');ok=false;}
+  }
+  if(step===1){
+    var ranges={inseam:[50,120],height:[120,220],torso:[30,90],armLength:[40,90],shoulderW:[25,65]};
+    Object.keys(ranges).forEach(function(f){
+      var v=parseFloat(document.getElementById(f).value);
+      S[f]=v;
+      if(!v||v<ranges[f][0]||v>ranges[f][1]){showE(f);ok=false;}
+    });
+  }
+  return ok;
+}
+
+function handleUpload(idx,input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    photos[idx]=e.target.result;
+    document.getElementById('pi'+idx).src=e.target.result;
+    document.getElementById('pw'+idx).style.display='block';
+    document.getElementById('uz'+idx).style.display='none';
+    document.getElementById('ab'+idx+'-wrap').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(idx){
+  photos[idx]=null;
+  photoAnalyses[idx]='';
+  document.getElementById('pi'+idx).src='';
+  document.getElementById('pw'+idx).style.display='none';
+  document.getElementById('uz'+idx).style.display='block';
+  document.getElementById('ab'+idx+'-wrap').style.display='none';
+  document.getElementById('abox'+idx).style.display='none';
+  document.getElementById('abox'+idx).innerHTML='';
+  document.getElementById('badge'+idx).style.display='none';
+}
+
+async function analysePhoto(idx,angle){
+  var b64=photos[idx];
+  if(!b64)return;
+  var abWrap=document.getElementById('ab'+idx+'-wrap');
+  var box=document.getElementById('abox'+idx);
+  var btn=abWrap.querySelector('button');
+  btn.disabled=true;
+  btn.textContent='Analysing...';
+  box.style.display='block';
+  box.innerHTML='<span class="loading-spin"><span class="spin">&#8635;</span> Claude is reviewing your position — this takes a few seconds...</span>';
+
+  var bikeLabel={road:'road',mountain:'mountain',gravel:'gravel',hybrid:'hybrid / commuter'}[S.bikeType]||'road';
+  var styleLabel={comfort:'comfort',performance:'performance',aggressive:'aggressive / race'}[S.rideStyle]||'performance';
+  var flexLabel={good:'good flexibility (can touch toes)',average:'average flexibility (fingertips to shins)',limited:'limited flexibility (can reach knees only)'}[S.flexibility]||'average flexibility';
+
+  var prompt='You are an expert bike fitter with 20 years of experience. The rider is on a '+bikeLabel+' bike, riding in a '+styleLabel+' style, with '+flexLabel+'.\n\nThis is a '+angle+' photo of them riding. Carefully analyse their position and provide 3 to 5 specific, actionable observations.\n\nFocus on these areas depending on the angle:\n- Side-on: knee angle at bottom of pedal stroke (should be 25-35 degrees of bend), back angle and spine position, arm bend at elbows (should be slightly bent, not locked), head and neck position, hip position over the saddle.\n- Front-facing: knee tracking (should move straight up and down, not flare in or out), shoulder symmetry, any lateral leaning or asymmetry.\n- Rear: hip drop or rocking at the bottom of the stroke, upper body sway, any obvious left-right asymmetry.\n\nFor each observation: state clearly what you see, whether it looks correct or needs attention, and if it needs attention, what specific adjustment to make (e.g. raise saddle 5mm, shorten stem). Be precise and practical. If the image quality or angle prevents you from assessing something reliably, say so briefly rather than guessing.\n\nFormat your response as a plain bulleted list using • as the bullet character. No headers. No preamble. Start directly with the first observation.';
+
+  var imgData=b64.split(',')[1];
+  var mimeType=b64.split(';')[0].split(':')[1]||'image/jpeg';
+
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mimeType,data:imgData}},
+          {type:'text',text:prompt}
+        ]}]
+      })
+    });
+    var data=await resp.json();
+    var text='';
+    if(data.content&&data.content[0]&&data.content[0].text){
+      text=data.content[0].text.trim();
+    } else {
+      text='Unable to analyse this photo. Please make sure the image is clear and well-lit, then try again.';
+    }
+    photoAnalyses[idx]=text;
+    var formatted=text
+      .replace(/\n\n/g,'<br><br>')
+      .replace(/\n/g,'<br>')
+      .replace(/•\s*/g,'<span style="color:var(--blue-mid);margin-right:5px;font-weight:700">→</span>')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+    box.innerHTML=formatted;
+    abWrap.style.display='none';
+    document.getElementById('badge'+idx).style.display='inline-flex';
+  } catch(err){
+    box.innerHTML='<span style="color:var(--red)">Analysis failed. Check your internet connection and try again.</span>';
+    btn.disabled=false;
+    btn.innerHTML='Retry analysis &#8635;';
+  }
+}
+
+function rnd(n,d){return parseFloat(n.toFixed(d||0));}
+
+function buildReport(){
+  var fields=['inseam','height','torso','armLength','shoulderW'];
+  fields.forEach(function(f){S[f]=parseFloat(document.getElementById(f).value);});
+
+  var ins=S.inseam,tor=S.torso,arm=S.armLength,sh=S.shoulderW,ht=S.height;
+  var isMTB=S.bikeType==='mountain';
+  var mult=isMTB?0.875:0.883;
+  var sLemond=rnd(ins*mult,0);
+  var sHamley=rnd(ins*1.09,0);
+  var sMid=rnd((sLemond+sHamley)/2,0);
+
+  var bwMin=isMTB?rnd(sh*10+20,0):rnd(sh*10-10,0);
+  var bwMax=isMTB?rnd(sh*10+40,0):rnd(sh*10+10,0);
+
+  var reachAdj=S.rideStyle==='aggressive'?5:S.rideStyle==='comfort'?-5:0;
+  var flexAdj=S.flexibility==='good'?0:S.flexibility==='average'?-5:-10;
+  var reach=rnd(tor+arm*0.6+reachAdj+flexAdj,0);
+  var stackAdj=S.rideStyle==='aggressive'?-20:S.rideStyle==='comfort'?20:0;
+  var stack=rnd(ht*0.57+stackAdj,0);
+
+  var pain=S.pain;
+  var adjustments=[];
+  if(pain.includes('knee'))adjustments.push({p:'Knee pain',t:'Check saddle height first. Pain at the front of the knee usually means the saddle is too low — raise it 3–5mm at a time. Pain at the back of the knee means it\'s too high — lower it. Also check cleat fore-aft position.'});
+  if(pain.includes('lower_back'))adjustments.push({p:'Lower back pain',t:'Usually a reach or saddle fore-aft issue. Try shortening your stem by 10mm or raising the handlebars. Check the saddle is level — a nose-down tilt forces you forward and overloads the lumbar spine.'});
+  if(pain.includes('neck'))adjustments.push({p:'Neck and upper back pain',t:'The reach is likely too long or the bars too low. Raise the handlebars with spacers or fit a shorter stem. Your elbows should always have a slight bend — locked arms transmit every bump directly to your neck.'});
+  if(pain.includes('hands'))adjustments.push({p:'Hand and wrist numbness',t:'Too much weight on your hands — caused by excessive reach or bars set too low. Shorten the stem or raise the bars. Check bar tilt: the flat section of drop bars should angle slightly downward, not be perfectly level.'});
+  if(pain.includes('sit_bones'))adjustments.push({p:'Saddle discomfort',t:'Start by levelling the saddle with a spirit level. A slight nose-down tilt (1–2 degrees max) can relieve pressure — more than that and you\'ll slide forward. If pain persists, the saddle may be the wrong width for your sit bone distance.'});
+  if(pain.includes('feet'))adjustments.push({p:'Foot pain / hot foot',t:'Move your cleats rearward toward mid-foot. This distributes load away from the metatarsals. Also check cleat rotation matches your natural toe angle — your foot should sit how it naturally wants to sit.'});
+  if(pain.includes('hip'))adjustments.push({p:'Hip rocking',t:'Your saddle is almost certainly too high. Lower it 3–5mm at a time and reassess after 2–3 rides. Hip rocking is the clearest visual sign that the leg is over-extending to reach the pedal.'});
+
+  var bikeLabel={road:'Road bike',mountain:'Mountain bike',gravel:'Gravel bike',hybrid:'Hybrid / commuter'}[S.bikeType];
+  var hasPhotos=photoAnalyses.some(function(a){return a.length>0;});
+  var needsPro=S.flexibility==='limited'||pain.length>=3||S.rideStyle==='aggressive';
+  var photoAngles=['Side-on view','Front-facing view','Rear view'];
+
+  var h='';
+
+  h+='<div class="report-card" style="border-left:3px solid var(--blue)">';
+  h+='<div style="display:flex;gap:16px;flex-wrap:wrap;">';
+  h+='<div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Bike</div><div style="font-size:14px;font-weight:700;color:var(--text)">'+bikeLabel+'</div></div>';
+  h+='<div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Style</div><div style="font-size:14px;font-weight:700;color:var(--text)">'+(S.rideStyle.charAt(0).toUpperCase()+S.rideStyle.slice(1))+'</div></div>';
+  h+='<div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">Flexibility</div><div style="font-size:14px;font-weight:700;color:var(--text)">'+(S.flexibility==='good'?'Good':S.flexibility==='average'?'Average':'Limited')+'</div></div>';
+  h+='</div></div>';
+
+  h+='<div class="section-label">Calculated targets</div>';
+
+  h+='<div class="report-card">';
+  h+='<div class="report-card-head"><div class="report-card-icon">📏</div><div class="report-card-title">Saddle height</div></div>';
+  h+='<div class="meas-row"><span class="meas-label">LeMond method (&times;'+mult+')</span><span class="meas-val">'+sLemond+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="meas-row"><span class="meas-label">Hamley method (&times;1.09)</span><span class="meas-val">'+sHamley+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="meas-row"><span class="meas-label">Recommended starting point</span><span class="meas-val accent">'+sMid+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="report-hint">Measured from centre of bottom bracket to top of saddle. Adjust in 3mm increments and allow 2–3 rides between changes.'+(isMTB?' For trail riding, drop this 5–10mm from the starting point.':'')+'</div>';
+  h+='</div>';
+
+  h+='<div class="report-card">';
+  h+='<div class="report-card-head"><div class="report-card-icon">↔️</div><div class="report-card-title">Handlebar width</div></div>';
+  h+='<div class="meas-row"><span class="meas-label">Recommended range</span><span class="meas-val accent">'+bwMin+'–'+bwMax+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="report-hint">'+(isMTB?'Shoulder width + 2–4cm. Start wider and cut bars down to size — you can never add length back. Most trail riders land between 760–800mm.':'Measured centre-to-centre at the drops. Match your shoulder width. Too narrow restricts breathing; too wide reduces control and aerodynamics.')+'</div>';
+  h+='</div>';
+
+  h+='<div class="report-card">';
+  h+='<div class="report-card-head"><div class="report-card-icon">📐</div><div class="report-card-title">Reach and stack estimate</div></div>';
+  h+='<div class="meas-row"><span class="meas-label">Reach (horizontal distance)</span><span class="meas-val accent">'+reach+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="meas-row"><span class="meas-label">Stack (vertical height)</span><span class="meas-val accent">'+stack+'<span class="meas-unit">mm</span></span></div>';
+  h+='<div class="report-hint">Use these figures when comparing frame geometry charts across brands. When riding, your arms should have a slight, relaxed bend at the elbows — not locked straight, not deeply bent.</div>';
+  h+='</div>';
+
+  if(hasPhotos){
+    h+='<div class="section-label">Photo analysis</div>';
+    photoAnalyses.forEach(function(analysis,i){
+      if(!analysis)return;
+      var formatted=analysis
+        .replace(/\n\n/g,'<br><br>')
+        .replace(/\n/g,'<br>')
+        .replace(/•\s*/g,'<span style="color:var(--blue-mid);margin-right:5px;font-weight:700">→</span>')
+        .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+      h+='<div class="report-card">';
+      h+='<div class="report-card-head"><div class="report-card-icon">📷</div><div class="report-card-title">'+photoAngles[i]+'</div></div>';
+      h+='<div class="photo-finding">'+formatted+'</div>';
+      h+='</div>';
+    });
+  }
+
+  if(adjustments.length>0){
+    h+='<div class="section-label">Pain-specific adjustments</div>';
+    h+='<div class="report-card">';
+    adjustments.forEach(function(a,i){
+      h+='<div class="adj-item"><div class="adj-num">'+(i+1)+'</div><div class="adj-text"><strong>'+a.p+'</strong> — '+a.t+'</div></div>';
+    });
+    h+='</div>';
+  }
+
+  h+='<div class="section-label">Setup notes</div>';
+  h+='<div class="report-card">';
+  h+='<div class="report-card-title" style="margin-bottom:8px">Saddle fore-aft position (KOPS method)</div>';
+  h+='<div style="font-size:13px;color:var(--text-secondary);line-height:1.6">With the cranks horizontal (3 o\'clock position), hang a plumb line from just below your kneecap. It should pass through or just behind the pedal axle. Move the saddle forward or backward on the rails to achieve this. Always re-check your saddle height after any fore-aft adjustment — the two affect each other.</div>';
+  h+='</div>';
+
+  h+='<div class="report-card">';
+  h+='<div class="report-card-title" style="margin-bottom:8px">Cleat position</div>';
+  h+='<div style="font-size:13px;color:var(--text-secondary);line-height:1.6">Position the cleat so the ball of your foot sits directly over the pedal spindle. Your natural toe angle — the direction your foot points at rest — should be replicated in the cleat rotation. If you experience knee pain, moving the cleat slightly rearward is often the first fix to try.</div>';
+  h+='</div>';
+
+  h+='<div class="section-label">Recommendation</div>';
+  if(needsPro){
+    h+='<div class="callout callout-amber"><span class="callout-icon">⚠️</span><span>Based on your profile, a professional bike fit is worth the investment. Limited flexibility, multiple pain points, or an aggressive race position all benefit significantly from motion capture and real-time biomechanical assessment. A professional fit typically costs $150–$350 and returns more comfort and performance than almost any component upgrade.</span></div>';
+  } else {
+    h+='<div class="callout callout-green"><span class="callout-icon">✅</span><span>Your profile is well-suited to a DIY fit using these numbers as a starting point. Begin with saddle height, ride 2–3 times, then adjust fore-aft position. Make all changes in 3–5mm increments and give your body time to adapt between adjustments.</span></div>';
+  }
+
+  h+='<div class="disclaimer">These calculations are starting points based on the LeMond (inseam &times; 0.883), Hamley (inseam &times; 1.09), and KOPS bike fitting methods. Photo analysis is AI-assisted and based on visual assessment only. Neither replaces a professional dynamic bike fit with motion capture equipment. If discomfort persists after making adjustments, consult a qualified bike fitter.</div>';
+
+  document.getElementById('reportContent').innerHTML=h;
+}
+</script>
+
+</body>
+</html>
